@@ -15,10 +15,12 @@ echo "Connecting to Wi-Fi..."
 iwctl station wlan0 connect "SSID"  # Replace with your Wi-Fi SSID
 
 # Step 2: Partition the Disk
-echo "Partitioning the disk..."
-sgdisk -Z /dev/nvme0n1  # Clear all partitions on nvme0n1
-sgdisk -n 1:0:+512M -t 1:ef00 $EFI_PARTITION  # EFI system partition
-sgdisk -n 2:0:0 -t 2:8309 $ROOT_PARTITION  # Encrypted LUKS partition
+# Partitioning using parted
+echo "Partitioning the disk with parted..."
+parted /dev/nvme0n1 --script mklabel gpt
+parted /dev/nvme0n1 --script mkpart ESP fat32 1MiB 513MiB
+parted /dev/nvme0n1 --script set 1 boot on
+parted /dev/nvme0n1 --script mkpart primary ext4 513MiB 100%
 
 # Step 3: Format the EFI partition
 echo "Formatting EFI partition..."
